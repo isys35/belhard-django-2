@@ -8,8 +8,11 @@ class Book(models.Model):
                              verbose_name='Название',
                              help_text='Вводи')
     text = models.TextField()
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(User,
+                               on_delete=models.CASCADE,
+                               related_name="books")
     date_publish = models.DateField(auto_now_add=True, db_index=True)
+    likes = models.ManyToManyField(User, related_name="liked_books")
 
     def __str__(self):
         return self.title
