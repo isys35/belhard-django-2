@@ -2,10 +2,8 @@ from django.contrib.auth import logout, login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
-
 from sales_manager.models import Book, Comment
 from django.views import View
-from django.db.models import Count, Prefetch
 from sales_manager.utils import get_book_with_comment
 
 
@@ -20,7 +18,6 @@ def book_detail(request, book_id):
     book = query_set.get(id=book_id)
     context = {"book": book}
     return render(request, "sales_manager/book_detail.html", context=context)
-
 
 
 @login_required(login_url="/admin/")
