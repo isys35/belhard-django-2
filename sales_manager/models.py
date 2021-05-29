@@ -12,7 +12,20 @@ class Book(models.Model):
                                on_delete=models.CASCADE,
                                related_name="books")
     date_publish = models.DateField(auto_now_add=True, db_index=True)
-    likes = models.ManyToManyField(User, related_name="liked_books")
+    likes = models.ManyToManyField(User, related_name="liked_books", blank=True)
 
     def __str__(self):
         return self.title
+
+
+class Comment(models.Model):
+    text = models.TextField()
+    date_publish = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User,
+                             on_delete=models.SET_DEFAULT,
+                             default=3,
+                             db_index=True,
+                             related_name="comments")
+    like = models.ManyToManyField(User, related_name="liked_comments", blank=True)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="comments")
+

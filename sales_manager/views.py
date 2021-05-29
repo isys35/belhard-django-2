@@ -1,22 +1,26 @@
 from django.contrib.auth import logout, login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
-from sales_manager.models import Book
+from django.views.decorators.http import require_http_methods
+
+from sales_manager.models import Book, Comment
 from django.views import View
-from django.db.models import Count
+from django.db.models import Count, Prefetch
+from sales_manager.utils import get_book_with_comment
 
 
 def main_page(request):
-    query_set = Book.objects.all().select_related("author").\
-        annotate(count_likes=Count("likes"))
-    context = {"query_set": query_set}
-    return render(request, 'sales_manager/index.html', context=context)
+    query_set = get_book_with_comment()
+    context = {"books": query_set}
+    return render(request, "sales_manager/index.html", context=context)
 
 
 def book_detail(request, book_id):
-    book = Book.objects.get(id=book_id)
-    context = {'book': book}
-    return render(request, 'sales_manager/book_detail.html', context=context)
+    query_set = get_book_with_comment()
+    book = query_set.get(id=book_id)
+    context = {"book": book}
+    return render(request, "sales_manager/book_detail.html", context=context)
+
 
 
 @login_required(login_url="/admin/")
@@ -45,3 +49,15 @@ class LoginView(View):
 def logout_view(request):
     logout(request)
     return redirect("main_page")
+
+
+@login_required()
+@require_http_methods(["POST"])
+def add_comment(request, book_id):
+    text = request.POST.get("text")
+    Comment.objects.create(
+        text=text,
+        user=request.user,
+        book_id=book_id
+    )
+    return redirect("book-detail", book_id=book_id)
