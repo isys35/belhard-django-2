@@ -4,7 +4,7 @@
 {% endblock %}
 {% block content %}
     <div class="container">
-        {% include 'sales_manager/book_view.html' with book=book %}
+        {% include 'sales_manager/book_view.html' with book=book redirect_url='book-detail' %}
         <form action="{% url "add-comment" book_id=book.id %}" method="post">
             {% csrf_token %}
             <div class="form-group">

@@ -4,7 +4,7 @@
     <h1>Hello, this is main page</h1>
     <hr>
     {% for book in books %}
-        {% include "sales_manager/book_view.html" with book=book %}
+        {% include "sales_manager/book_view.html" with book=book redirect_url='main_page' %}
     {% endfor %}
 </div>
 {% endblock %}
