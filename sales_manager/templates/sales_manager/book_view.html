@@ -2,9 +2,11 @@
 {{ book.text }}<br>
 <i>{{ book.author }}</i><br>
 {{ book.date_publish|date:"m-Y" }}<br>
-<a href="{% url "book-like" book_id=book.id redirect_url=redirect_url %}">
-    <i>likes {{ book.rate_avg }}</i>
-</a>
+<i>Rate: {{ book.avg_rate }} </i>
+{% for i in '12345' %}
+    <a href="{% url 'book-rate' book_id=book.id rate=i redirect_url=redirect_url %}">{{ i }}</a>
+{% endfor %}
+
 <br>
     {% for comment in book.comments.all %}
         <p>{{ comment.text }}</p>
