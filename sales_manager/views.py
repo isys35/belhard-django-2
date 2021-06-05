@@ -1,8 +1,13 @@
 from django.contrib.auth import logout, login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg
+from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
+from rest_framework.generics import ListAPIView
+from rest_framework.serializers import ModelSerializer
+from rest_framework.views import APIView
+
 from sales_manager.models import Book, Comment, UserRateBook
 from django.views import View
 from sales_manager.utils import get_book_with_comment
@@ -65,3 +70,38 @@ def add_comment(request, book_id):
         book_id=book_id
     )
     return redirect("book-detail", book_id=book_id)
+
+
+@login_required()
+def comment_like(request, comment_id):
+    com = Comment.objects.get(id=comment_id)
+    if request.user in com.like.all():
+        com.like.remove(request.user)
+    else:
+        com.like.add(request.user)
+    return redirect("book-detail", com.book_id)
+
+
+def add_like_ajax(request):
+    comment_id = request.POST.get('comment_id')
+    query_com = Comment.objects.filter(id=comment_id)
+    if query_com.exists():
+        com = query_com.first()
+        if request.user in com.like.all():
+            com.like.remove(request.user)
+        else:
+            com.like.add(request.user)
+        return HttpResponse(com.like.count())
+    return HttpResponseNotFound()
+
+
+class BookSerializer(ModelSerializer):
+    class Meta:
+        model = Book
+        fields = "__all__ "
+
+
+class BookListAPIView(ListAPIView):
+    serializer_class = BookSerializer
+    queryset = Book.objects.all()
+
