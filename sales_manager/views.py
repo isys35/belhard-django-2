@@ -4,9 +4,14 @@ from django.db.models import Avg
 from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
-from rest_framework.generics import ListAPIView
+from rest_framework import status
+from rest_framework.generics import ListAPIView, ListCreateAPIView, GenericAPIView, UpdateAPIView, \
+    RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
 from rest_framework.views import APIView
+#from django_filters import rest_framework as filters
+from rest_framework import filters
 
 from sales_manager.models import Book, Comment, UserRateBook
 from django.views import View
@@ -98,10 +103,45 @@ def add_like_ajax(request):
 class BookSerializer(ModelSerializer):
     class Meta:
         model = Book
-        fields = "__all__ "
+        fields = ["id","title", "text", "date_publish", "author"]
 
 
-class BookListAPIView(ListAPIView):
-    serializer_class = BookSerializer
+# class BookListAPIView(ListAPIView):
+#     serializer_class = BookSerializer
+#     queryset = Book.objects.all()
+
+# class BookListAPIView(APIView):
+#
+#     def get(self, request):
+#         query_set = Book.objects.all()
+#         serializer = BookSerializer(query_set, many=True)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+#
+#     def post(self, request):
+#         serializer = BookSerializer(data=request.data)
+#         if serializer.is_valid():
+#             book = serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class BookListAPIView(ListCreateAPIView):
     queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
+    ordering_fields = ("id", 'title')
+    ordering = ["-id"]
+    search_fields = ("title", 'text')
 
+
+class BookDetail(GenericAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+
+    def get(self, request, pk):
+        serializer = self.serializer_class(self.get_object())
+        return Response(serializer.data)
+
+
+class BookUpdateAPI(RetrieveUpdateDestroyAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer

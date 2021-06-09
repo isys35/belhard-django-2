@@ -19,7 +19,6 @@ const csrftoken = getCookie('csrftoken');
 $("document").ready(
     function ()
     {
-    console.log("dasdadasd");
     $(".comment-like").on("click", function () {
         let comment_id = $(this).attr("id");
         $.ajax({
