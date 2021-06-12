@@ -12,6 +12,7 @@ urlpatterns = [
     path("login/", views.LoginView.as_view(), name="login"),
     path("logout/", views.logout_view, name="logout"),
     path("add_comment/<int:book_id>/", views.add_comment, name="add-comment"),
-    path("add_rate_book_api/", views.AddRateBookAPI.as_view()),
+    path("add_rate_book_api/", views.AddRateBookAPI.as_view(), name='add-rate-book'),
+    path("create_book/", views.BookCreate.as_view(), name="create_book"),
     path('', views.main_page, name="main_page"),
 ]

@@ -8,7 +8,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
 from rest_framework import status
 from rest_framework.generics import ListAPIView, ListCreateAPIView, GenericAPIView, UpdateAPIView, \
-    RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
+    RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView
 from rest_framework.response import Response
 from rest_framework import serializers
 from rest_framework.views import APIView
@@ -108,6 +108,12 @@ class BookSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "text", "date_publish", "author", "avg_rate"]
 
 
+class CreateBookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = ["title", "text", "img", "author"]
+
+
 class RateBookSerializer(serializers.Serializer):
     rate = serializers.IntegerField()
     book_id = serializers.IntegerField()
@@ -161,6 +167,11 @@ class BookUpdateAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = BookSerializer
 
 
+class BookCreate(CreateAPIView):
+    queryset = Book.objects
+    serializer_class = CreateBookSerializer
+
+
 class AddRateBookAPI(APIView):
     serializer_class = RateBookSerializer
 
@@ -177,4 +188,4 @@ class AddRateBookAPI(APIView):
         )
         book.avg_rate = book.rated_user.aggregate(rate=Avg("rate"))['rate']
         book.save(update_fields=['avg_rate'])
-        return Response({}, status=status.HTTP_200_OK)
+        return Response({'avg_rate': book.avg_rate}, status=status.HTTP_200_OK)
