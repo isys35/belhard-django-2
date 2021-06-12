@@ -1,16 +1,18 @@
+from abc import ABC
+
 from django.contrib.auth import logout, login, authenticate
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg
 from django.http import HttpResponse, HttpResponseNotFound
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
 from rest_framework import status
 from rest_framework.generics import ListAPIView, ListCreateAPIView, GenericAPIView, UpdateAPIView, \
     RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
-from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 from rest_framework.views import APIView
-#from django_filters import rest_framework as filters
+# from django_filters import rest_framework as filters
 from rest_framework import filters
 
 from sales_manager.models import Book, Comment, UserRateBook
@@ -100,10 +102,22 @@ def add_like_ajax(request):
     return HttpResponseNotFound()
 
 
-class BookSerializer(ModelSerializer):
+class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = ["id","title", "text", "date_publish", "author"]
+        fields = ["id", "title", "text", "date_publish", "author", "avg_rate"]
+
+
+class RateBookSerializer(serializers.Serializer):
+    rate = serializers.IntegerField()
+    book_id = serializers.IntegerField()
+
+    def validate_rate(self, instance):
+        if instance > 5:
+            raise serializers.ValidationError("rate must be less than 5")
+        elif instance < 0:
+            raise serializers.ValidationError("rate must be more than 0")
+        return instance
 
 
 # class BookListAPIView(ListAPIView):
@@ -145,3 +159,22 @@ class BookDetail(GenericAPIView):
 class BookUpdateAPI(RetrieveUpdateDestroyAPIView):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+
+
+class AddRateBookAPI(APIView):
+    serializer_class = RateBookSerializer
+
+    # permission_classes = []
+
+    def put(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        book = get_object_or_404(Book, id=serializer.data['book_id'])
+        UserRateBook.objects.update_or_create(
+            user_id=request.user.id,
+            book_id=book.id,
+            defaults={'rate': serializer.data['rate']}
+        )
+        book.avg_rate = book.rated_user.aggregate(rate=Avg("rate"))['rate']
+        book.save(update_fields=['avg_rate'])
+        return Response({}, status=status.HTTP_200_OK)
