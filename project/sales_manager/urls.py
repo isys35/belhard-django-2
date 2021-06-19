@@ -1,5 +1,6 @@
 from django.urls import path
 from sales_manager import views
+from django.views.decorators.cache import cache_page
 
 urlpatterns = [
     path("api-book-update/<int:pk>", views.BookUpdateAPI.as_view()),
@@ -15,4 +16,5 @@ urlpatterns = [
     path("add_rate_book_api/", views.AddRateBookAPI.as_view(), name='add-rate-book'),
     path("create_book/", views.BookCreate.as_view(), name="create_book"),
     path('', views.main_page, name="main_page"),
+    path("all_books/", cache_page(60*15)(views.BookListAPIView.as_view()))
 ]
